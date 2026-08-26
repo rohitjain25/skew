@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>SKEW brand</title>
+    <style>
+      @font-face {
+        font-family: Inter;
+        src: url("file:///usr/share/fonts/truetype/macos/Inter-Bold.ttf") format("truetype");
+        font-weight: 700;
+      }
+      @font-face {
+        font-family: Inter;
+        src: url("file:///usr/share/fonts/truetype/macos/Inter-Regular.ttf") format("truetype");
+        font-weight: 400;
+      }
+      html, body { margin: 0; background: #0B0B0C; }
+      body.og { width: 1200px; height: 630px; display: flex; align-items: center; justify-content: space-between; padding: 0 96px; box-sizing: border-box; }
+      .copy h1 { margin: 0; font-family: Inter, sans-serif; font-weight: 700; font-size: 96px; color: #F4F1EA; letter-spacing: -0.04em; }
+      .copy p { margin: 18px 0 0; font-family: Inter, sans-serif; font-size: 32px; color: #8A8680; position: relative; display: inline-block; }
+      .copy p::after { content: ""; position: absolute; left: 0; bottom: -10px; width: 78px; height: 7px; background: #E8FF47; }
+      .mark { display: flex; gap: 22px; align-items: center; }
+      .bar { width: 92px; height: 92px; background: #F4F1EA; border-radius: 18px; }
+      .bar.skew { transform: rotate(-8deg); }
+      body.logo { width: 1024px; height: 1024px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 48px; }
+      .logo-bars { display: flex; gap: 36px; }
+      .logo-bars .bar { width: 120px; height: 200px; border-radius: 28px; }
+      .word { font-family: Inter, sans-serif; font-weight: 700; font-size: 72px; letter-spacing: 0.42em; color: #F4F1EA; padding-left: 0.42em; }
+      body.ico { width: 512px; height: 512px; display: grid; place-items: center; }
+      .ico { display: flex; gap: 36px; }
+      .ico .bar { width: 72px; height: 280px; border-radius: 28px; }
+      .ico .bar.skew { transform: rotate(12deg); }
+    </style>
+  </head>
+  <body class="og">
+    <script>
+      const page = new URLSearchParams(location.search).get("p") || "og";
+      document.body.className = page;
+      if (page === "og") {
+        document.body.innerHTML = `<div class="copy"><h1>SKEW</h1><p>Find the fake.</p></div>
+          <div class="mark"><i class="bar"></i><i class="bar skew"></i><i class="bar"></i></div>`;
+      } else if (page === "logo") {
+        document.body.innerHTML = `<div class="logo-bars"><i class="bar"></i><i class="bar skew"></i><i class="bar"></i></div><div class="word">S K E W</div>`;
+      } else {
+        document.body.innerHTML = `<div class="ico"><i class="bar"></i><i class="bar skew"></i><i class="bar"></i></div>`;
+      }
+    </script>
+  </body>
+</html>
