@@ -1,11 +1,6 @@
-/** Optional tip rail (D-005). Empty string hides the results-screen line. */
-const DEFAULT_TIP_UPI_URL =
-  "upi://pay?pa=sarveshscientist1590-3@okicici&pn=SKEW&am=49&cu=INR";
-
-const envTip = import.meta.env.VITE_TIP_UPI_URL as string | undefined;
-
+/** Confirmed UPI rail (D-005). Always shown on results. */
 export const TIP_UPI_URL =
-  envTip !== undefined && envTip.length > 0 ? envTip : DEFAULT_TIP_UPI_URL;
+  "upi://pay?pa=sarveshscientist1590-3@okicici&pn=SKEW&am=49&cu=INR";
 
 export const TIP_VPA = "sarveshscientist1590-3@okicici";
 export const TIP_PAYEE = "SKEW";

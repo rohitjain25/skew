@@ -41,4 +41,4 @@ This is a static frontend. Any of these work:
 
 Set `VITE_SITE_URL` only if you want absolute Open Graph URLs. Not required to play.
 
-To change the tip link, edit `TIP_UPI_URL` in `src/config.ts` (empty string hides the line).
+The results screen always includes an optional ₹49 UPI tip (`pn=SKEW`). The game is free without it.

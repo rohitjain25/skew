@@ -5,6 +5,7 @@ import {
   LIVES,
   SHARE_DOMAIN_LOCKUP,
   TIP_AMOUNT_LABEL,
+  TIP_UPI_URL,
   TIP_VPA,
 } from "./config";
 import { Engine } from "./game/engine";
@@ -19,13 +20,7 @@ import {
   utcDateId,
 } from "./game/index";
 import { getDailySubmit, recordRun } from "./storage";
-import {
-  challengeText,
-  isUpiCapable,
-  openTip,
-  shareResult,
-  tipEnabled,
-} from "./share";
+import { challengeText, isUpiCapable, shareResult } from "./share";
 import type { Mode, RunSnapshot } from "./game/types";
 
 function root(): HTMLDivElement {
@@ -40,7 +35,6 @@ let engine: Engine | null = null;
 let raf = 0;
 let lastResult: (RunSnapshot & { best: number; newBest: boolean; submitted: boolean }) | null =
   null;
-let tipRevealed = false;
 
 function vibrate(pattern: number | number[]): void {
   try {
@@ -209,7 +203,6 @@ function finish(): void {
   const snap = engine.snapshot();
   const rec = recordRun(snap);
   lastResult = { ...snap, ...rec };
-  tipRevealed = false;
   renderResults();
 }
 
@@ -233,15 +226,6 @@ function renderResults(): void {
       : snap.mode === "daily" && snap.practice
         ? "Practice · first run already saved"
         : "";
-  const tip = tipEnabled()
-    ? `<div class="tip">
-        <button class="tip-btn" type="button" data-act="tip">If this ate a minute, send ${TIP_AMOUNT_LABEL}.</button>
-        <div class="tip-vpa ${tipRevealed ? "" : "hidden"}" data-tip-vpa>
-          <span class="vpa">${TIP_VPA}</span>
-          <button class="btn-mini" type="button" data-act="copy-vpa">Copy</button>
-        </div>
-      </div>`
-    : "";
   show(`
     <main class="screen results">
       <article class="score-card" aria-label="Score card">
@@ -260,7 +244,14 @@ function renderResults(): void {
         <button class="btn btn-ghost" data-act="again" type="button">Play again</button>
         <button class="btn btn-text" data-act="home" type="button">Home</button>
       </div>
-      ${tip}
+      <div class="tip">
+        <a class="tip-btn" data-act="tip" href="${TIP_UPI_URL}">If this ate a minute, send ${TIP_AMOUNT_LABEL}.</a>
+        <div class="tip-vpa" data-tip-vpa>
+          <p class="tip-fallback">If UPI did not open, copy the VPA.</p>
+          <span class="vpa">${TIP_VPA}</span>
+          <button class="btn-mini" type="button" data-act="copy-vpa">Copy</button>
+        </div>
+      </div>
     </main>
   `);
   app.querySelector("[data-act=share]")?.addEventListener("click", async (ev) => {
@@ -302,19 +293,9 @@ function renderResults(): void {
   });
   app.querySelector("[data-act=again]")?.addEventListener("click", () => startGame(snap.mode, snap.mode === "daily"));
   app.querySelector("[data-act=home]")?.addEventListener("click", landing);
-  app.querySelector("[data-act=tip]")?.addEventListener("click", () => {
-    const status = openTip();
-    tipRevealed = true;
-    const box = app.querySelector("[data-tip-vpa]");
-    box?.classList.remove("hidden");
-    if (status === "copy" || !isUpiCapable()) {
-      const note = box?.querySelector(".vpa");
-      if (note && !box?.querySelector(".tip-fallback")) {
-        const p = document.createElement("p");
-        p.className = "tip-fallback";
-        p.textContent = "If UPI did not open, copy the VPA.";
-        box?.insertBefore(p, box.firstChild);
-      }
+  app.querySelector("[data-act=tip]")?.addEventListener("click", (ev) => {
+    if (!isUpiCapable()) {
+      ev.preventDefault();
     }
   });
   app.querySelector("[data-act=copy-vpa]")?.addEventListener("click", async (ev) => {

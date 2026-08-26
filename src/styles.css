@@ -381,6 +381,14 @@ button {
   text-decoration: underline;
   text-underline-offset: 4px;
   padding: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.tip-btn:visited {
+  color: var(--muted);
 }
 
 .tip-vpa {

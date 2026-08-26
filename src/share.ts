@@ -1,4 +1,4 @@
-import { SHARE_DOMAIN_LOCKUP, TIP_AMOUNT_LABEL, TIP_PAYEE, TIP_UPI_URL, TIP_VPA } from "./config";
+import { SHARE_DOMAIN_LOCKUP } from "./config";
 import { formatScore } from "./game/scoring";
 import type { Mode } from "./game/types";
 
@@ -146,24 +146,6 @@ function downloadBlob(blob: Blob, name: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
 
-export function tipEnabled(): boolean {
-  return TIP_UPI_URL.length > 0;
-}
-
 export function isUpiCapable(): boolean {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
-
-export function openTip(): "opened" | "copy" {
-  if (isUpiCapable()) {
-    window.location.href = TIP_UPI_URL;
-    return "opened";
-  }
-  return "copy";
-}
-
-export function tipCopyPayload(): string {
-  return TIP_VPA;
-}
-
-export { TIP_AMOUNT_LABEL, TIP_PAYEE, TIP_UPI_URL, TIP_VPA };
