@@ -46,7 +46,7 @@ describe("round invariant", () => {
   });
 
   it("early rounds prefer structural diffs", () => {
-    const first = generateRun(42, 3).map((r) => r.diffType);
+    const first = generateRun(42, 4).map((r) => r.diffType);
     expect(first.every((d) => d !== "hue" && d !== "saturation")).toBe(true);
   });
 });

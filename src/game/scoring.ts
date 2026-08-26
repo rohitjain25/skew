@@ -2,14 +2,15 @@ export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
-/** 0 = obvious, 1 = tiny. Caps toward micro-diffs for long endless runs. */
+/** 0 = obvious, 1 = tiny. First rounds stay readable; later ones tighten. */
 export function difficultyT(roundIndex: number): number {
-  return 1 - Math.exp(-roundIndex / 9);
+  if (roundIndex <= 3) return roundIndex * 0.07;
+  return Math.min(1, 0.28 + (1 - Math.exp(-(roundIndex - 3) / 11)) * 0.72);
 }
 
 export function roundDurationMs(roundIndex: number): number {
-  const t = Math.min(1, roundIndex / 14);
-  return Math.round(lerp(5600, 2400, t));
+  const t = Math.min(1, roundIndex / 16);
+  return Math.round(lerp(7200, 2400, t));
 }
 
 /**
