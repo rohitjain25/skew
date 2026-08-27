@@ -150,16 +150,6 @@ button {
   font-weight: 500;
 }
 
-.btn-mini {
-  appearance: none;
-  border: 1px solid #ffffff22;
-  background: var(--surface);
-  border-radius: 8px;
-  padding: 8px 12px;
-  min-height: 40px;
-  font-size: 13px;
-}
-
 .fine {
   margin: 22px 0 0;
   color: var(--muted);
@@ -393,58 +383,6 @@ button {
   color: var(--muted);
   font-size: 13px;
   font-family: var(--mono);
-}
-
-.tip {
-  width: min(100%, 360px);
-  margin-top: 8px;
-  text-align: center;
-}
-
-.tip-btn {
-  appearance: none;
-  background: none;
-  border: 0;
-  color: var(--muted);
-  font-size: 14px;
-  min-height: 44px;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  padding: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.tip-btn:visited {
-  color: var(--muted);
-}
-
-.tip-vpa {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.tip-vpa.hidden {
-  display: none;
-}
-
-.vpa {
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--text);
-  user-select: all;
-  word-break: break-all;
-}
-
-.tip-fallback {
-  margin: 0;
-  font-size: 12px;
-  color: var(--muted);
 }
 
 .text-ink {

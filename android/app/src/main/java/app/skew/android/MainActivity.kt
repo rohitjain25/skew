@@ -24,8 +24,6 @@ import app.skew.android.game.formatCountdown
 import app.skew.android.game.msUntilNextUtcMidnight
 import app.skew.android.game.randomSeed
 import app.skew.android.game.utcDateId
-import app.skew.android.share.copyText
-import app.skew.android.share.openUpi
 import app.skew.android.share.shareChallenge
 import app.skew.android.share.shareScore
 import app.skew.android.storage.RecordResult
@@ -161,8 +159,6 @@ private fun SkewApp(store: SkewStore) {
             },
             onAgain = { start(s.snap.mode, s.snap.mode == Mode.DAILY) },
             onHome = { goHome() },
-            onTip = { openUpi(context) },
-            onCopyVpa = { copyText(context, Config.TIP_VPA) },
         )
     }
 

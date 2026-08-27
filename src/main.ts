@@ -4,9 +4,6 @@ import {
   DAILY_SEED_VERSION,
   LIVES,
   SITE_URL,
-  TIP_AMOUNT_LABEL,
-  TIP_UPI_URL,
-  TIP_VPA,
 } from "./config";
 import { Engine } from "./game/engine";
 import {
@@ -22,7 +19,7 @@ import {
   syncDailyQuery,
 } from "./game/index";
 import { getDailySubmit, recordRun } from "./storage";
-import { cardDateLine, challengeText, isUpiCapable, shareBoardMarkup, shareLockup, shareResult } from "./share";
+import { cardDateLine, challengeText, shareBoardMarkup, shareLockup, shareResult } from "./share";
 import type { Mode, RunSnapshot } from "./game/types";
 
 function root(): HTMLDivElement {
@@ -255,14 +252,6 @@ function renderResults(): void {
         <button class="btn btn-ghost" data-act="again" type="button">Play again</button>
         <button class="btn btn-text" data-act="home" type="button">Home</button>
       </div>
-      <div class="tip">
-        <a class="tip-btn" data-act="tip" href="${TIP_UPI_URL}">If this ate a minute, send ${TIP_AMOUNT_LABEL}.</a>
-        <div class="tip-vpa" data-tip-vpa>
-          <p class="tip-fallback">If UPI did not open, copy the VPA.</p>
-          <span class="vpa">${TIP_VPA}</span>
-          <button class="btn-mini" type="button" data-act="copy-vpa">Copy</button>
-        </div>
-      </div>
     </main>
   `);
   app.querySelector("[data-act=share]")?.addEventListener("click", async (ev) => {
@@ -305,20 +294,6 @@ function renderResults(): void {
   });
   app.querySelector("[data-act=again]")?.addEventListener("click", () => startGame(snap.mode, snap.mode === "daily"));
   app.querySelector("[data-act=home]")?.addEventListener("click", landing);
-  app.querySelector("[data-act=tip]")?.addEventListener("click", (ev) => {
-    if (!isUpiCapable()) {
-      ev.preventDefault();
-    }
-  });
-  app.querySelector("[data-act=copy-vpa]")?.addEventListener("click", async (ev) => {
-    const btn = ev.currentTarget as HTMLButtonElement;
-    try {
-      await navigator.clipboard.writeText(TIP_VPA);
-      btn.textContent = "Copied";
-    } catch {
-      btn.textContent = "Select + copy";
-    }
-  });
 }
 
 function onKey(ev: KeyboardEvent): void {

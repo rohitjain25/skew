@@ -12,8 +12,6 @@ Daily uses the UTC date as a seed. `?d=YYYY-MM-DD` selects that UTC day. Missing
 
 Personal best is saved in localStorage. There is no public leaderboard.
 
-Optional ₹49 UPI tip on the results screen. The game is free either way.
-
 ## Play locally
 
 ```bash
@@ -42,8 +40,6 @@ This is a static frontend. Any of these work:
 **Origin / Vercel:** framework preset Vite, output `dist`.
 
 `VITE_SITE_URL` is the public origin used for Open Graph and share links.
-
-The results screen always includes an optional ₹49 UPI tip (`pn=SKEW`). The game is free without it.
 
 ## Android
 

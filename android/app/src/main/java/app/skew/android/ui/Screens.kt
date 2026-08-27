@@ -39,7 +39,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.skew.android.Config
@@ -273,8 +272,6 @@ fun ResultsScreen(
     onChallenge: () -> Unit,
     onAgain: () -> Unit,
     onHome: () -> Unit,
-    onTip: () -> Unit,
-    onCopyVpa: () -> Unit,
 ) {
     val kicker = resultKicker(snap.mode, snap.practice, submitted)
     val meta = resultMeta(roundLabel, newBest, best)
@@ -341,31 +338,6 @@ fun ResultsScreen(
             ) {
                 Text("Home", color = Muted, fontSize = 16.sp)
             }
-        }
-        Text(
-            "If this ate a minute, send ${Config.TIP_AMOUNT_LABEL}.",
-            color = Muted,
-            fontSize = 14.sp,
-            textDecoration = TextDecoration.Underline,
-            modifier = Modifier.padding(top = 16.dp).clickable(onClick = onTip),
-        )
-        Text(
-            "If UPI did not open, copy the VPA.",
-            color = Muted,
-            fontSize = 12.sp,
-            modifier = Modifier.padding(top = 8.dp),
-        )
-        Text(Config.TIP_VPA, color = Text, fontSize = 13.sp, fontFamily = FontFamily.Monospace)
-        Box(
-            Modifier
-                .padding(top = 8.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(8.dp))
-                .background(Surface)
-                .clickable(onClick = onCopyVpa)
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-        ) {
-            Text("Copy", color = Text, fontSize = 13.sp)
         }
     }
 }

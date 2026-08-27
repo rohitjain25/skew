@@ -344,7 +344,3 @@ function downloadBlob(blob: Blob, name: string): void {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
-
-export function isUpiCapable(): boolean {
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-}

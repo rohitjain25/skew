@@ -1,7 +1,6 @@
 package app.skew.android.share
 
 import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -238,18 +237,4 @@ fun shareChallenge(context: Context, score: Int, dateId: String) {
         putExtra(Intent.EXTRA_SUBJECT, "SKEW")
     }
     context.startActivity(Intent.createChooser(intent, "SKEW"))
-}
-
-fun copyText(context: Context, text: String) {
-    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    cm.setPrimaryClip(ClipData.newPlainText("SKEW", text))
-}
-
-fun openUpi(context: Context): Boolean {
-    return try {
-        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Config.TIP_UPI_URL)))
-        true
-    } catch (_: Exception) {
-        false
-    }
 }
