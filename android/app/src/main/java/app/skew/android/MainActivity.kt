@@ -154,7 +154,7 @@ private fun SkewApp(store: SkewStore) {
             submitted = s.rec.submitted,
             roundLabel = s.roundLabel,
             onShare = {
-                shareScore(context, s.snap.score, s.roundLabel, s.rec.newBest, s.dateId)
+                shareScore(context, s.snap.score, s.roundLabel, s.rec.newBest, s.dateId, s.snap.mode)
             },
             onChallenge = {
                 shareChallenge(context, s.snap.score, s.dateId)

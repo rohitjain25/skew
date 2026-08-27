@@ -1,5 +1,6 @@
 package app.skew.android.ui
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,7 +27,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -40,6 +49,10 @@ import app.skew.android.game.RunSnapshot
 import app.skew.android.game.formatScore
 import app.skew.android.resultKicker
 import app.skew.android.resultMeta
+import app.skew.android.share.ShareSil
+import app.skew.android.share.cardDateLine
+import app.skew.android.share.shareLockup
+import app.skew.android.share.shareSilhouettes
 
 @Composable
 fun LogoBars(modifier: Modifier = Modifier) {
@@ -285,22 +298,28 @@ fun ResultsScreen(
             Text("SKEW", color = Text, fontSize = 15.sp, fontWeight = FontWeight.Bold, letterSpacing = 8.sp)
             Spacer(Modifier.height(18.dp))
             LogoBars(Modifier)
+            Spacer(Modifier.height(18.dp))
+            ShareSilRow(shareSilhouettes(snap.mode, snap.date ?: ""))
             Text(
                 formatScore(snap.score),
                 color = Text,
                 fontSize = 64.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 28.dp),
+                modifier = Modifier.padding(top = 22.dp),
             )
             Text(meta, color = Text, fontSize = 13.sp, fontFamily = FontFamily.Monospace)
-            Text("Can you beat me?", color = Muted, fontSize = 15.sp, modifier = Modifier.padding(top = 48.dp))
+            cardDateLine(snap.mode, snap.date ?: "")?.let { date ->
+                Text(date, color = Muted, fontSize = 12.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(top = 8.dp))
+            }
+            Text("Can you beat me?", color = Muted, fontSize = 15.sp, modifier = Modifier.padding(top = 36.dp))
             Box(Modifier.padding(top = 14.dp).width(48.dp).height(3.dp).background(Accent))
             Text(
-                Config.SHARE_DOMAIN_LOCKUP,
+                shareLockup(),
                 color = Text,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
-                letterSpacing = 4.sp,
+                letterSpacing = 0.4.sp,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 28.dp),
             )
         }
@@ -347,6 +366,110 @@ fun ResultsScreen(
                 .padding(horizontal = 12.dp, vertical = 10.dp),
         ) {
             Text("Copy", color = Text, fontSize = 13.sp)
+        }
+    }
+}
+
+@Composable
+private fun ShareSilRow(sils: List<ShareSil>) {
+    Row(
+        Modifier.widthIn(max = 220.dp).fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        sils.forEach { kind ->
+            Box(
+                Modifier
+                    .weight(1f)
+                    .aspectRatio(3f / 4f)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Surface)
+                    .border(1.dp, Hairline, RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Canvas(Modifier.fillMaxSize().padding(8.dp)) {
+                    val u = size.minDimension / 2f
+                    val stroke = Stroke(width = u * 0.18f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+                    val cx = size.width / 2f
+                    val cy = size.height / 2f
+                    when (kind) {
+                        ShareSil.CIRCLE -> drawCircle(Text, u * 0.55f, Offset(cx, cy))
+                        ShareSil.TRIANGLE -> {
+                            val p = Path().apply {
+                                moveTo(cx, cy - u * 0.6f)
+                                lineTo(cx + u * 0.55f, cy + u * 0.5f)
+                                lineTo(cx - u * 0.55f, cy + u * 0.5f)
+                                close()
+                            }
+                            drawPath(p, Text, style = Fill)
+                        }
+                        ShareSil.DIAMOND -> {
+                            val p = Path().apply {
+                                moveTo(cx, cy - u * 0.6f)
+                                lineTo(cx + u * 0.5f, cy)
+                                lineTo(cx, cy + u * 0.6f)
+                                lineTo(cx - u * 0.5f, cy)
+                                close()
+                            }
+                            drawPath(p, Text, style = Fill)
+                        }
+                        ShareSil.BARS -> {
+                            val w = u * 0.18f
+                            val h = u * 1.1f
+                            val gap = u * 0.12f
+                            val x0 = cx - (w * 3 + gap * 2) / 2
+                            repeat(3) { i ->
+                                drawRoundRect(
+                                    Text,
+                                    Offset(x0 + i * (w + gap), cy - h / 2),
+                                    Size(w, h),
+                                    CornerRadius(w / 2, w / 2),
+                                )
+                            }
+                        }
+                        ShareSil.SLASH -> {
+                            val p = Path().apply {
+                                moveTo(cx - u * 0.4f, cy + u * 0.45f)
+                                lineTo(cx + u * 0.4f, cy - u * 0.45f)
+                            }
+                            drawPath(p, Text, style = stroke)
+                        }
+                        ShareSil.CHEVRON -> {
+                            val p = Path().apply {
+                                moveTo(cx - u * 0.4f, cy - u * 0.4f)
+                                lineTo(cx + u * 0.35f, cy)
+                                lineTo(cx - u * 0.4f, cy + u * 0.4f)
+                            }
+                            drawPath(p, Text, style = stroke)
+                        }
+                        ShareSil.CAPSULE -> drawRoundRect(
+                            Text,
+                            Offset(cx - u * 0.28f, cy - u * 0.6f),
+                            Size(u * 0.56f, u * 1.2f),
+                            CornerRadius(u * 0.28f, u * 0.28f),
+                        )
+                        ShareSil.PLUS -> {
+                            val p = Path().apply {
+                                val a = u * 0.18f
+                                val b = u * 0.55f
+                                moveTo(cx - a, cy - b)
+                                lineTo(cx + a, cy - b)
+                                lineTo(cx + a, cy - a)
+                                lineTo(cx + b, cy - a)
+                                lineTo(cx + b, cy + a)
+                                lineTo(cx + a, cy + a)
+                                lineTo(cx + a, cy + b)
+                                lineTo(cx - a, cy + b)
+                                lineTo(cx - a, cy + a)
+                                lineTo(cx - b, cy + a)
+                                lineTo(cx - b, cy - a)
+                                lineTo(cx - a, cy - a)
+                                close()
+                            }
+                            drawPath(p, Text, style = Fill)
+                        }
+                    }
+                }
+            }
         }
     }
 }

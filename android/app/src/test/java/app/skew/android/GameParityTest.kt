@@ -18,7 +18,11 @@ import app.skew.android.game.isUtcDateId
 import app.skew.android.game.roundDurationMs
 import app.skew.android.game.scoreHit
 import app.skew.android.game.scoreMiss
+import app.skew.android.share.ShareSil
+import app.skew.android.share.cardDateLine
 import app.skew.android.share.challengeText
+import app.skew.android.share.shareLockup
+import app.skew.android.share.shareSilhouettes
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -159,6 +163,19 @@ class GameParityTest {
         assertFalse(text.contains("₹"))
         assertEquals("upi://pay?pa=sarveshscientist1590-3@okicici&pn=SKEW&am=49&cu=INR", Config.TIP_UPI_URL)
         assertEquals("SKEW", Config.TIP_PAYEE)
+        assertEquals("temporary-zippy-mistral-mg92d6h.vercel.app", shareLockup())
+        assertFalse(shareLockup().contains("SKEW.GAME"))
+        assertFalse(shareLockup().contains("S K E W"))
+        assertEquals("2026-08-26 UTC", cardDateLine(Mode.DAILY, "2026-08-26"))
+        assertEquals(null, cardDateLine(Mode.ENDLESS, "2026-08-26"))
+        assertEquals(
+            listOf(ShareSil.DIAMOND, ShareSil.CHEVRON, ShareSil.SLASH),
+            shareSilhouettes(Mode.DAILY, "2026-08-26"),
+        )
+        assertEquals(
+            listOf(ShareSil.DIAMOND, ShareSil.DIAMOND, ShareSil.PLUS),
+            shareSilhouettes(Mode.DAILY, "2026-08-27"),
+        )
     }
 
     @Test

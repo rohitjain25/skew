@@ -3,7 +3,6 @@ import {
   DAILY_ROUNDS,
   DAILY_SEED_VERSION,
   LIVES,
-  SHARE_DOMAIN_LOCKUP,
   SITE_URL,
   TIP_AMOUNT_LABEL,
   TIP_UPI_URL,
@@ -23,7 +22,7 @@ import {
   syncDailyQuery,
 } from "./game/index";
 import { getDailySubmit, recordRun } from "./storage";
-import { challengeText, isUpiCapable, shareResult } from "./share";
+import { cardDateLine, challengeText, isUpiCapable, shareBoardMarkup, shareLockup, shareResult } from "./share";
 import type { Mode, RunSnapshot } from "./game/types";
 
 function root(): HTMLDivElement {
@@ -241,11 +240,13 @@ function renderResults(): void {
       <article class="score-card" aria-label="Score card">
         <p class="card-brand">SKEW</p>
         <div class="card-mark">${logoMark()}</div>
+        <div class="card-sils">${shareBoardMarkup(snap.mode, dateId)}</div>
         <p class="card-score">${formatScore(snap.score)}</p>
         <p class="card-meta">${label} · ${snap.newBest ? "New best" : bestLine}</p>
+        ${snap.mode === "daily" && cardDateLine(snap.mode, dateId) ? `<p class="card-date">${cardDateLine(snap.mode, dateId)}</p>` : ""}
         <p class="card-cta">Can you beat me?</p>
         <i class="card-rule" aria-hidden="true"></i>
-        <p class="card-url">${SHARE_DOMAIN_LOCKUP}</p>
+        <p class="card-url">${shareLockup()}</p>
       </article>
       <p class="result-kicker">${modeLine}${submitLine ? ` · ${submitLine}` : ""}</p>
       <div class="actions">
