@@ -42,3 +42,15 @@ This is a static frontend. Any of these work:
 `VITE_SITE_URL` is the public origin used for Open Graph and share links.
 
 The results screen always includes an optional ₹49 UPI tip (`pn=SKEW`). The game is free without it.
+
+## Android
+
+Native Kotlin + Jetpack Compose app under `android/` (`applicationId app.skew.android`). Same scoring, daily seed, and puzzles as the web client.
+
+```bash
+cd android
+./gradlew assembleDebug testDebugUnitTest
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+See `ANDROID.md`.

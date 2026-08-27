@@ -5,3 +5,10 @@ dist
 *.local
 .vite
 .ssh
+android/local.properties
+android/.gradle
+android/**/build
+android/.idea
+android/build-outputs
+.android-sdk
+
