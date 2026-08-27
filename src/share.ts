@@ -306,7 +306,7 @@ export async function shareResult(opts: {
   newBest: boolean;
   mode: Mode;
   dateId: string;
-}): Promise<"shared" | "downloaded" | "copied"> {
+}): Promise<"shared" | "downloaded" | "copied" | "cancelled"> {
   const blob = await renderScoreCard(opts);
   const file = new File([blob], "skew-score.png", { type: "image/png" });
   const text = challengeText(opts.score, location.origin, opts.dateId);
@@ -324,7 +324,7 @@ export async function shareResult(opts: {
       downloadBlob(blob, file.name);
       return "shared";
     } catch (err) {
-      if ((err as DOMException).name === "AbortError") return "shared";
+      if ((err as DOMException).name === "AbortError") return "cancelled";
     }
   }
   downloadBlob(blob, file.name);

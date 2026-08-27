@@ -19,6 +19,7 @@ import {
   syncDailyQuery,
 } from "./game/index";
 import { getDailySubmit, recordRun } from "./storage";
+import { fireBeacon } from "./beacon";
 import { cardDateLine, challengeText, shareBoardMarkup, shareLockup, shareResult } from "./share";
 import type { Mode, RunSnapshot } from "./game/types";
 
@@ -91,6 +92,7 @@ function startGame(mode: Mode, practice = false): void {
   engine.start();
   renderGame();
   loop();
+  fireBeacon("play");
 }
 
 function livesMarkup(n: number): string {
@@ -265,7 +267,9 @@ function renderResults(): void {
         mode: snap.mode,
         dateId,
       });
-      btn.textContent = status === "shared" ? "Shared" : status === "copied" ? "Saved + copied" : "Saved";
+      if (status === "shared") fireBeacon("share");
+      btn.textContent =
+        status === "shared" ? "Shared" : status === "copied" ? "Saved + copied" : status === "cancelled" ? "Share card" : "Saved";
     } catch {
       btn.textContent = "Share failed";
     } finally {
@@ -281,6 +285,7 @@ function renderResults(): void {
     try {
       if (navigator.share) {
         await navigator.share({ title: "SKEW", text });
+        fireBeacon("share");
       } else {
         await navigator.clipboard.writeText(text);
         btn.textContent = "Copied";
