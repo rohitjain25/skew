@@ -1,4 +1,5 @@
-import { SHARE_DOMAIN_LOCKUP } from "./config";
+import { SHARE_DOMAIN_LOCKUP, SITE_URL } from "./config";
+import { dailyPath } from "./game/daily";
 import { formatScore } from "./game/scoring";
 import type { Mode } from "./game/types";
 
@@ -12,11 +13,16 @@ export interface CardInput {
   roundLabel: string;
   newBest: boolean;
   mode: Mode;
+  dateId: string;
 }
 
-export function challengeText(score: number, origin: string): string {
-  const url = origin.replace(/\/$/, "");
-  return `SKEW — Find the fake. I scored ${formatScore(score)}. Can you beat me?${url ? `\n${url}` : ""}`;
+export function challengeOrigin(fallbackOrigin: string): string {
+  return (SITE_URL || fallbackOrigin).replace(/\/$/, "");
+}
+
+export function challengeText(score: number, origin: string, dateId: string): string {
+  const link = `${challengeOrigin(origin)}${dailyPath(dateId)}`;
+  return `SKEW — Find the fake. I scored ${formatScore(score)}. Can you beat me?\n${link}`;
 }
 
 export async function renderScoreCard(input: CardInput): Promise<Blob> {
@@ -37,31 +43,16 @@ export async function renderScoreCard(input: CardInput): Promise<Blob> {
   setTracking(ctx, "18px");
   ctx.fillText("SKEW", w / 2, 220);
 
-  const cy = 320;
-  const size = 44;
-  const gap = 28;
-  const total = size * 3 + gap * 2;
-  const x0 = (w - total) / 2;
-  ctx.fillStyle = TEXT;
-  rounded(ctx, x0, cy, size, size, 8);
-  ctx.fill();
-  ctx.save();
-  ctx.translate(x0 + size + gap + size / 2, cy + size / 2);
-  ctx.rotate((45 * Math.PI) / 180);
-  rounded(ctx, -size / 2, -size / 2, size, size, 8);
-  ctx.fill();
-  ctx.restore();
-  rounded(ctx, x0 + (size + gap) * 2, cy, size, size, 8);
-  ctx.fill();
+  drawBrandBars(ctx, w / 2, 340);
 
   setTracking(ctx, "0px");
   ctx.font = "800 140px ui-sans-serif, system-ui, sans-serif";
   ctx.fillStyle = TEXT;
-  ctx.fillText(formatScore(input.score), w / 2, 620);
+  ctx.fillText(formatScore(input.score), w / 2, 640);
 
   ctx.font = "500 36px ui-monospace, SFMono-Regular, Menlo, monospace";
   const stats = input.newBest ? `${input.roundLabel}  ·  New best` : input.roundLabel;
-  ctx.fillText(stats, w / 2, 700);
+  ctx.fillText(stats, w / 2, 720);
 
   ctx.fillStyle = MUTED;
   ctx.font = "500 34px ui-sans-serif, system-ui, sans-serif";
@@ -77,6 +68,24 @@ export async function renderScoreCard(input: CardInput): Promise<Blob> {
 
   return await new Promise((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("toBlob"))), "image/png");
+  });
+}
+
+/** Brand mark only: three upright bars, middle slightly skewed. No puzzles, rupee, or chips. */
+function drawBrandBars(ctx: CanvasRenderingContext2D, cx: number, cy: number): void {
+  const barW = 28;
+  const barH = 72;
+  const gap = 22;
+  const rx = 8;
+  ctx.fillStyle = TEXT;
+  const xs = [cx - barW * 1.5 - gap, cx - barW / 2, cx + barW / 2 + gap];
+  xs.forEach((x, i) => {
+    ctx.save();
+    ctx.translate(x + barW / 2, cy);
+    if (i === 1) ctx.rotate((-8 * Math.PI) / 180);
+    rounded(ctx, -barW / 2, -barH / 2, barW, barH, rx);
+    ctx.fill();
+    ctx.restore();
   });
 }
 
@@ -107,10 +116,11 @@ export async function shareResult(opts: {
   roundLabel: string;
   newBest: boolean;
   mode: Mode;
+  dateId: string;
 }): Promise<"shared" | "downloaded" | "copied"> {
   const blob = await renderScoreCard(opts);
   const file = new File([blob], "skew-score.png", { type: "image/png" });
-  const text = challengeText(opts.score, location.origin);
+  const text = challengeText(opts.score, location.origin, opts.dateId);
   const nav = navigator as Navigator & {
     canShare?: (data: ShareData) => boolean;
   };

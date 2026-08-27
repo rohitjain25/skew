@@ -4,20 +4,23 @@ import {
   DAILY_SEED_VERSION,
   LIVES,
   SHARE_DOMAIN_LOCKUP,
+  SITE_URL,
   TIP_AMOUNT_LABEL,
   TIP_UPI_URL,
   TIP_VPA,
 } from "./config";
 import { Engine } from "./game/engine";
 import {
+  dailyDateFromSearch,
   dailySeed,
   formatCountdown,
   formatScore,
+  hasDailyParam,
   logoMark,
   msUntilNextUtcMidnight,
   randomSeed,
   shapeSvg,
-  utcDateId,
+  syncDailyQuery,
 } from "./game/index";
 import { getDailySubmit, recordRun } from "./storage";
 import { challengeText, isUpiCapable, shareResult } from "./share";
@@ -48,10 +51,14 @@ function show(html: string): void {
   app.innerHTML = html;
 }
 
+function activeDailyDate(): string {
+  return dailyDateFromSearch(location.search);
+}
+
 function landing(): void {
   cancelAnimationFrame(raf);
   engine = null;
-  const dateId = utcDateId();
+  const dateId = activeDailyDate();
   const submit = getDailySubmit(dateId);
   const reset = formatCountdown(msUntilNextUtcMidnight());
   const dailyNote = submit
@@ -75,7 +82,8 @@ function landing(): void {
 }
 
 function startGame(mode: Mode, practice = false): void {
-  const dateId = utcDateId();
+  const dateId = activeDailyDate();
+  if (mode === "daily") syncDailyQuery(dateId);
   const seed = mode === "daily" ? dailySeed(dateId, DAILY_SEED_VERSION) : randomSeed();
   const already = mode === "daily" && Boolean(getDailySubmit(dateId));
   engine = new Engine({
@@ -217,6 +225,8 @@ function renderResults(): void {
     landing();
     return;
   }
+  const dateId = snap.date ?? activeDailyDate();
+  const shareOrigin = SITE_URL || location.origin;
   const label = roundLabel(snap);
   const bestLine = snap.newBest ? "New best" : `Best ${formatScore(snap.best)}`;
   const modeLine = snap.mode === "daily" ? (snap.practice ? "Daily practice" : "Daily") : "Endless";
@@ -230,7 +240,7 @@ function renderResults(): void {
     <main class="screen results">
       <article class="score-card" aria-label="Score card">
         <p class="card-brand">SKEW</p>
-        <div class="card-mark">${logoMark({ skewedDeg: 45, barRx: 4 })}</div>
+        <div class="card-mark">${logoMark()}</div>
         <p class="card-score">${formatScore(snap.score)}</p>
         <p class="card-meta">${label} · ${snap.newBest ? "New best" : bestLine}</p>
         <p class="card-cta">Can you beat me?</p>
@@ -263,6 +273,7 @@ function renderResults(): void {
         roundLabel: label,
         newBest: snap.newBest,
         mode: snap.mode,
+        dateId,
       });
       btn.textContent = status === "shared" ? "Shared" : status === "copied" ? "Saved + copied" : "Saved";
     } catch {
@@ -276,7 +287,7 @@ function renderResults(): void {
   });
   app.querySelector("[data-act=challenge]")?.addEventListener("click", async (ev) => {
     const btn = ev.currentTarget as HTMLButtonElement;
-    const text = challengeText(snap.score, location.origin);
+    const text = challengeText(snap.score, shareOrigin, dateId);
     try {
       if (navigator.share) {
         await navigator.share({ title: "SKEW", text });
@@ -324,4 +335,5 @@ function onKey(ev: KeyboardEvent): void {
 }
 
 window.addEventListener("keydown", onKey);
-landing();
+if (hasDailyParam(location.search)) startGame("daily");
+else landing();

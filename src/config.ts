@@ -11,3 +11,5 @@ export const DAILY_ROUNDS = 12;
 export const DAILY_SEED_VERSION = "skew-daily-v1";
 
 export const SHARE_DOMAIN_LOCKUP = "S K E W . G A M E";
+
+export const SITE_URL = String(import.meta.env.VITE_SITE_URL ?? "").replace(/\/$/, "");
