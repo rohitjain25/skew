@@ -1,11 +1,9 @@
 package app.skew.android.storage
 
 import android.content.Context
-import app.skew.android.Config
 import app.skew.android.game.Ended
 import app.skew.android.game.Mode
 import app.skew.android.game.RunSnapshot
-import app.skew.android.game.formatScore
 import app.skew.android.game.utcDateId
 import org.json.JSONObject
 
@@ -74,9 +72,6 @@ class SkewStore(context: Context) {
         return RecordResult(best, snap.score > prevBest, submitted)
     }
 
-    fun dailyNote(dateId: String = utcDateId()): String {
-        val submit = getDailySubmit(dateId)
-        return if (submit == null) "${Config.DAILY_ROUNDS} rounds · UTC"
-        else "Today ${formatScore(submit.score)}"
-    }
+    fun dailyNote(dateId: String = utcDateId()): String =
+        app.skew.android.dailyNoteLabel(getDailySubmit(dateId)?.score)
 }

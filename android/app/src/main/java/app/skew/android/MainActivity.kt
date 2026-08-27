@@ -5,6 +5,7 @@ import android.os.SystemClock
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.LaunchedEffect
@@ -63,8 +64,25 @@ private fun SkewApp(store: SkewStore) {
     var flashIndex by remember { mutableStateOf<Int?>(null) }
     var flashHit by remember { mutableStateOf<Boolean?>(null) }
     var tick by remember { mutableStateOf(0) }
+    var clock by remember { mutableStateOf(System.currentTimeMillis()) }
 
     fun now() = SystemClock.elapsedRealtime().toDouble()
+
+    fun goHome() {
+        flashIndex = null
+        flashHit = null
+        screen = Screen.Landing
+    }
+
+    BackHandler(enabled = screen !is Screen.Landing) { goHome() }
+
+    LaunchedEffect(screen) {
+        if (screen !is Screen.Landing) return@LaunchedEffect
+        while (true) {
+            clock = System.currentTimeMillis()
+            delay(1000)
+        }
+    }
 
     fun roundLabel(snap: RunSnapshot): String {
         val n = if (snap.ended.name == "COMPLETE") {
@@ -111,7 +129,7 @@ private fun SkewApp(store: SkewStore) {
     when (val s = screen) {
         Screen.Landing -> LandingScreen(
             dailyNote = store.dailyNote(),
-            resetLabel = formatCountdown(msUntilNextUtcMidnight()),
+            resetLabel = formatCountdown(msUntilNextUtcMidnight(clock)),
             onPlay = { start(Mode.ENDLESS) },
             onDaily = { start(Mode.DAILY) },
         )
@@ -142,7 +160,7 @@ private fun SkewApp(store: SkewStore) {
                 shareChallenge(context, s.snap.score, s.dateId)
             },
             onAgain = { start(s.snap.mode, s.snap.mode == Mode.DAILY) },
-            onHome = { screen = Screen.Landing },
+            onHome = { goHome() },
             onTip = { openUpi(context) },
             onCopyVpa = { copyText(context, Config.TIP_VPA) },
         )

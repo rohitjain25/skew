@@ -160,4 +160,20 @@ class GameParityTest {
         assertEquals("upi://pay?pa=sarveshscientist1590-3@okicici&pn=SKEW&am=49&cu=INR", Config.TIP_UPI_URL)
         assertEquals("SKEW", Config.TIP_PAYEE)
     }
+
+    @Test
+    fun webCopyMatches() {
+        assertEquals("12 rounds · UTC", dailyNoteLabel(null))
+        assertEquals("Today 8,421", dailyNoteLabel(8421))
+        assertEquals("Endless", resultKicker(Mode.ENDLESS, practice = false, submitted = false))
+        assertEquals("Daily · Saved for today", resultKicker(Mode.DAILY, practice = false, submitted = true))
+        assertEquals(
+            "Daily practice · Practice · first run already saved",
+            resultKicker(Mode.DAILY, practice = true, submitted = false),
+        )
+        assertEquals("Round 4 · New best", resultMeta("Round 4", newBest = true, best = 100))
+        assertEquals("Round 4 · Best 1,200", resultMeta("Round 4", newBest = false, best = 1200))
+        assertEquals("If this ate a minute, send ₹49.", "If this ate a minute, send ${Config.TIP_AMOUNT_LABEL}.")
+        assertEquals("Free. No account. 3 lives. Combo. ~45–90s.", "Free. No account. 3 lives. Combo. ~45–90s.")
+    }
 }

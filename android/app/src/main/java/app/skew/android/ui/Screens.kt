@@ -38,6 +38,8 @@ import app.skew.android.game.Engine
 import app.skew.android.game.Mode
 import app.skew.android.game.RunSnapshot
 import app.skew.android.game.formatScore
+import app.skew.android.resultKicker
+import app.skew.android.resultMeta
 
 @Composable
 fun LogoBars(modifier: Modifier = Modifier) {
@@ -208,10 +210,11 @@ fun GameScreen(
         }
         Text(modeLabel, color = Muted, fontSize = 12.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(top = 8.dp))
         Text(
-            if (engine.combo >= 2) "×${engine.combo}" else " ",
-            color = Accent,
+            if (engine.combo >= 2) "×${engine.combo}" else "×",
+            color = if (engine.combo >= 2) Accent else Color.Transparent,
             fontSize = 14.sp,
             fontFamily = FontFamily.Monospace,
+            letterSpacing = 1.sp,
             modifier = Modifier.height(24.dp),
         )
         Row(
@@ -223,10 +226,10 @@ fun GameScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             engine.current.items.forEachIndexed { i, item ->
-                val borderColor = when {
-                    flashIndex == i && flashHit == true -> Accent
-                    flashIndex == i && flashHit == false -> Danger
+                val inset = when {
+                    flashHit == true && flashIndex == i -> Accent
                     flashHit == false && i == engine.current.oddIndex -> Accent
+                    flashIndex == i && flashHit == false -> Danger
                     else -> Hairline
                 }
                 Box(
@@ -235,7 +238,7 @@ fun GameScreen(
                         .aspectRatio(3f / 4.2f)
                         .clip(RoundedCornerShape(16.dp))
                         .background(Surface)
-                        .border(2.dp, borderColor, RoundedCornerShape(16.dp))
+                        .border(2.dp, inset, RoundedCornerShape(16.dp))
                         .clickable(enabled = flashIndex == null) { onTap(i) }
                         .padding(8.dp),
                 ) {
@@ -260,17 +263,8 @@ fun ResultsScreen(
     onTip: () -> Unit,
     onCopyVpa: () -> Unit,
 ) {
-    val modeLine = when {
-        snap.mode == Mode.DAILY && snap.practice -> "Daily practice"
-        snap.mode == Mode.DAILY -> "Daily"
-        else -> "Endless"
-    }
-    val submitLine = when {
-        snap.mode == Mode.DAILY && submitted -> "Saved for today"
-        snap.mode == Mode.DAILY && snap.practice -> "Practice · first run already saved"
-        else -> ""
-    }
-    val meta = if (newBest) "$roundLabel · New best" else "$roundLabel · Best ${formatScore(best)}"
+    val kicker = resultKicker(snap.mode, snap.practice, submitted)
+    val meta = resultMeta(roundLabel, newBest, best)
     Column(
         Modifier
             .fillMaxSize()
@@ -311,7 +305,7 @@ fun ResultsScreen(
             )
         }
         Text(
-            if (submitLine.isEmpty()) modeLine else "$modeLine · $submitLine",
+            kicker,
             color = Muted,
             fontSize = 13.sp,
             fontFamily = FontFamily.Monospace,
