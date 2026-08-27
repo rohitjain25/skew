@@ -42,3 +42,24 @@ fun hasDailyParam(search: String): Boolean {
 }
 
 fun dailyPath(dateId: String): String = "/?d=$dateId"
+
+private const val APP_LINK_HOST = "temporary-zippy-mistral-mg92d6h.vercel.app"
+
+/**
+ * UTC date for an https App Link to the live host.
+ * Missing or invalid `d` falls back to UTC today. Unknown hosts return null
+ * so a cold launcher start does not auto-play Daily.
+ */
+fun dateIdFromDeepLink(uriString: String?, nowMillis: Long = System.currentTimeMillis()): String? {
+    if (uriString.isNullOrBlank()) return null
+    val uri = try {
+        java.net.URI(uriString)
+    } catch (_: Exception) {
+        return null
+    }
+    val host = uri.host ?: return null
+    if (host != APP_LINK_HOST) return null
+    val scheme = uri.scheme ?: return null
+    if (scheme != "https" && scheme != "http") return null
+    return dailyDateFromSearch(uri.rawQuery ?: uri.query ?: "", nowMillis)
+}

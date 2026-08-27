@@ -55,6 +55,24 @@ fun cardDateLine(mode: Mode, dateId: String): String? =
 fun cardMetaLine(roundLabel: String, newBest: Boolean): String =
     if (newBest) "$roundLabel  ·  New best" else roundLabel
 
+data class ShareCardSpec(
+    val silhouettes: List<ShareSil>,
+    val dateLine: String?,
+    val lockup: String,
+    val scoreLabel: String,
+    val packetText: String,
+)
+
+/** Layout contract for the PNG: hashed silhouettes, UTC date, live host lockup. */
+fun shareCardSpec(score: Int, dateId: String, mode: Mode, roundLabel: String, newBest: Boolean): ShareCardSpec =
+    ShareCardSpec(
+        silhouettes = shareSilhouettes(mode, dateId),
+        dateLine = cardDateLine(mode, dateId),
+        lockup = shareLockup(),
+        scoreLabel = formatScore(score),
+        packetText = challengeText(score, dateId),
+    )
+
 fun renderScoreCard(
     score: Int,
     roundLabel: String,
@@ -212,6 +230,28 @@ fun shareScore(
     newBest: Boolean,
     dateId: String,
     mode: Mode,
+) = sharePacket(context, score, roundLabel, newBest, dateId, mode)
+
+fun shareChallenge(
+    context: Context,
+    score: Int,
+    roundLabel: String,
+    newBest: Boolean,
+    dateId: String,
+    mode: Mode,
+) = sharePacket(context, score, roundLabel, newBest, dateId, mode)
+
+/**
+ * Android Sharesheet packet: PNG + one line + live `?d=` URL.
+ * Backing out of the sheet never fires a play/share beacon (none on Android this pass).
+ */
+fun sharePacket(
+    context: Context,
+    score: Int,
+    roundLabel: String,
+    newBest: Boolean,
+    dateId: String,
+    mode: Mode,
 ) {
     val text = challengeText(score, dateId)
     val bmp = renderScoreCard(score, roundLabel, newBest, dateId, mode)
@@ -219,22 +259,17 @@ fun shareScore(
     val file = File(dir, "skew-score.png")
     FileOutputStream(file).use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
     val uri: Uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+    val clip = ClipData.newUri(context.contentResolver, "SKEW", uri)
+    clip.addItem(ClipData.Item(text))
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "image/png"
         putExtra(Intent.EXTRA_TEXT, text)
         putExtra(Intent.EXTRA_STREAM, uri)
-        clipData = ClipData.newUri(context.contentResolver, "SKEW", uri)
+        clipData = clip
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
-    context.startActivity(Intent.createChooser(intent, "SKEW"))
-}
-
-fun shareChallenge(context: Context, score: Int, dateId: String) {
-    val text = challengeText(score, dateId)
-    val intent = Intent(Intent.ACTION_SEND).apply {
-        type = "text/plain"
-        putExtra(Intent.EXTRA_TEXT, text)
-        putExtra(Intent.EXTRA_SUBJECT, "SKEW")
+    val chooser = Intent.createChooser(intent, "SKEW").apply {
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
-    context.startActivity(Intent.createChooser(intent, "SKEW"))
+    context.startActivity(chooser)
 }

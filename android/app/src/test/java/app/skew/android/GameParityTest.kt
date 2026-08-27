@@ -5,8 +5,11 @@ import app.skew.android.game.Engine
 import app.skew.android.game.Family
 import app.skew.android.game.Mode
 import app.skew.android.game.Rng
+import app.skew.android.game.Round
+import app.skew.android.game.ShapeParams
 import app.skew.android.game.Verdict
 import app.skew.android.game.comboMultiplier
+import app.skew.android.game.dateIdFromDeepLink
 import app.skew.android.game.dailyDateFromSearch
 import app.skew.android.game.dailySeed
 import app.skew.android.game.difficultyT
@@ -21,6 +24,7 @@ import app.skew.android.game.scoreMiss
 import app.skew.android.share.ShareSil
 import app.skew.android.share.cardDateLine
 import app.skew.android.share.challengeText
+import app.skew.android.share.shareCardSpec
 import app.skew.android.share.shareLockup
 import app.skew.android.share.shareSilhouettes
 import org.junit.Assert.assertEquals
@@ -191,4 +195,94 @@ class GameParityTest {
         assertEquals("Round 4 · Best 1,200", resultMeta("Round 4", newBest = false, best = 1200))
         assertEquals("Free. No account. 3 lives. Combo. ~45–90s.", "Free. No account. 3 lives. Combo. ~45–90s.")
     }
+
+    @Test
+    fun dailyGolden20260827Through20260903MatchesWeb() {
+        assertEquals(8, DailyGolden.days.size)
+        assertEquals("2026-08-27", DailyGolden.days.first().date)
+        assertEquals("2026-09-03", DailyGolden.days.last().date)
+        for (day in DailyGolden.days) {
+            assertEquals(day.date, day.seed, dailySeed(day.date, Config.DAILY_SEED_VERSION))
+            val got = generateDaily(day.date)
+            assertEquals("${day.date} round count", 12, got.size)
+            day.rounds.forEachIndexed { i, expected ->
+                assertRound("${day.date} r$i", expected, got[i])
+            }
+            assertEquals(
+                "${day.date} share silhouettes use skew-share-sil-v1, not the puzzle stream",
+                day.silhouettes,
+                shareSilhouettes(Mode.DAILY, day.date),
+            )
+        }
+    }
+
+    @Test
+    fun sharePacketIsImageContractPlusOneLineAndLiveUrl() {
+        val spec = shareCardSpec(8421, "2026-08-27", Mode.DAILY, "Round 12", false)
+        assertEquals("8,421", spec.scoreLabel)
+        assertEquals("2026-08-27 UTC", spec.dateLine)
+        assertEquals("temporary-zippy-mistral-mg92d6h.vercel.app", spec.lockup)
+        assertFalse(spec.lockup.contains("SKEW.GAME", ignoreCase = true))
+        assertEquals(
+            listOf(ShareSil.DIAMOND, ShareSil.DIAMOND, ShareSil.PLUS),
+            spec.silhouettes,
+        )
+        val lines = spec.packetText.split("\n")
+        assertEquals(2, lines.size)
+        assertEquals("SKEW — Find the fake. I scored 8,421. Can you beat me?", lines[0])
+        assertEquals("https://temporary-zippy-mistral-mg92d6h.vercel.app/?d=2026-08-27", lines[1])
+        assertFalse(spec.packetText.contains("₹"))
+        assertFalse(spec.packetText.contains("upi://"))
+        assertFalse(spec.packetText.contains("poker", ignoreCase = true))
+        assertFalse(spec.packetText.contains("chip", ignoreCase = true))
+        assertEquals(null, shareCardSpec(100, "", Mode.ENDLESS, "Round 4", false).dateLine)
+    }
+
+    @Test
+    fun httpsAppLinkPlaysThatUtcDate() {
+        val now = 1_787_846_400_000L // 2026-08-27T18:40:00Z
+        assertEquals(
+            "2026-08-28",
+            dateIdFromDeepLink("https://temporary-zippy-mistral-mg92d6h.vercel.app/?d=2026-08-28", now),
+        )
+        assertEquals(
+            "2026-08-27",
+            dateIdFromDeepLink("https://temporary-zippy-mistral-mg92d6h.vercel.app/", now),
+        )
+        assertEquals(
+            "2026-08-27",
+            dateIdFromDeepLink("https://temporary-zippy-mistral-mg92d6h.vercel.app/?d=nope", now),
+        )
+        assertEquals(null, dateIdFromDeepLink(null, now))
+        assertEquals(null, dateIdFromDeepLink("https://example.com/?d=2026-08-27", now))
+        assertEquals("2026-08-27", dailyDateFromSearch("?d=2026-08-27", now))
+    }
+}
+
+private fun assertRound(label: String, expected: Round, got: Round) {
+    assertEquals("$label family", expected.family, got.family)
+    assertEquals("$label diff", expected.diffType, got.diffType)
+    assertEquals("$label odd", expected.oddIndex, got.oddIndex)
+    assertEquals("$label duration", expected.durationMs, got.durationMs)
+    assertEquals("$label item count", 3, got.items.size)
+    expected.items.forEachIndexed { i, exp ->
+        assertShape("$label item$i", exp, got.items[i])
+    }
+}
+
+private fun assertShape(label: String, expected: ShapeParams, got: ShapeParams) {
+    assertEquals("$label family", expected.family, got.family)
+    assertEquals("$label fillH", expected.fillH, got.fillH, 1e-12)
+    assertEquals("$label fillS", expected.fillS, got.fillS, 1e-12)
+    assertEquals("$label fillL", expected.fillL, got.fillL, 1e-12)
+    assertEquals("$label strokeOn", expected.strokeOn, got.strokeOn)
+    assertEquals("$label strokeW", expected.strokeW, got.strokeW, 1e-12)
+    assertEquals("$label rotation", expected.rotation, got.rotation, 1e-12)
+    assertEquals("$label scale", expected.scale, got.scale, 1e-12)
+    assertEquals("$label offsetX", expected.offsetX, got.offsetX, 1e-12)
+    assertEquals("$label offsetY", expected.offsetY, got.offsetY, 1e-12)
+    assertEquals("$label mirror", expected.mirror, got.mirror)
+    assertEquals("$label count", expected.count, got.count)
+    assertEquals("$label micro", expected.micro, got.micro)
+    assertEquals("$label microSize", expected.microSize, got.microSize, 1e-12)
 }

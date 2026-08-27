@@ -1,5 +1,6 @@
 package app.skew.android
 
+import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
 import android.os.VibrationEffect
@@ -9,6 +10,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,12 +22,12 @@ import app.skew.android.game.Mode
 import app.skew.android.game.RunSnapshot
 import app.skew.android.game.Verdict
 import app.skew.android.game.dailySeed
+import app.skew.android.game.dateIdFromDeepLink
 import app.skew.android.game.formatCountdown
 import app.skew.android.game.msUntilNextUtcMidnight
 import app.skew.android.game.randomSeed
 import app.skew.android.game.utcDateId
-import app.skew.android.share.shareChallenge
-import app.skew.android.share.shareScore
+import app.skew.android.share.sharePacket
 import app.skew.android.storage.RecordResult
 import app.skew.android.storage.SkewStore
 import app.skew.android.ui.GameScreen
@@ -35,11 +37,22 @@ import app.skew.android.ui.SkewTheme
 import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
+    private val deepLinkDate = mutableStateOf<String?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        if (savedInstanceState == null) {
+            deepLinkDate.value = dateIdFromDeepLink(intent?.dataString)
+        }
         val store = SkewStore(this)
-        setContent { SkewTheme { SkewApp(store) } }
+        setContent { SkewTheme { SkewApp(store, deepLinkDate) } }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        deepLinkDate.value = dateIdFromDeepLink(intent.dataString)
     }
 }
 
@@ -55,7 +68,7 @@ private sealed class Screen {
 }
 
 @androidx.compose.runtime.Composable
-private fun SkewApp(store: SkewStore) {
+private fun SkewApp(store: SkewStore, deepLinkDate: MutableState<String?>) {
     val context = LocalContext.current
     var screen by remember { mutableStateOf<Screen>(Screen.Landing) }
     var remaining by remember { mutableStateOf(0.0) }
@@ -89,8 +102,8 @@ private fun SkewApp(store: SkewStore) {
         return "Round $n"
     }
 
-    fun start(mode: Mode, practice: Boolean = false) {
-        val dateId = utcDateId()
+    fun start(mode: Mode, practice: Boolean = false, dateIdOverride: String? = null) {
+        val dateId = dateIdOverride ?: utcDateId()
         val seed = if (mode == Mode.DAILY) dailySeed(dateId, Config.DAILY_SEED_VERSION) else randomSeed()
         val already = mode == Mode.DAILY && store.getDailySubmit(dateId) != null
         val engine = Engine(mode, seed, if (mode == Mode.DAILY) dateId else null, practice || already)
@@ -99,6 +112,12 @@ private fun SkewApp(store: SkewStore) {
         flashHit = null
         remaining = engine.current.durationMs.toDouble()
         screen = Screen.Playing(engine)
+    }
+
+    LaunchedEffect(deepLinkDate.value) {
+        val d = deepLinkDate.value ?: return@LaunchedEffect
+        deepLinkDate.value = null
+        start(Mode.DAILY, dateIdOverride = d)
     }
 
     fun buzz(hit: Boolean) {
@@ -142,7 +161,6 @@ private fun SkewApp(store: SkewStore) {
                 flashIndex = index
                 flashHit = result.verdict == Verdict.HIT
                 buzz(result.verdict == Verdict.HIT)
-                // settle on next frame via tick after delay
             },
         )
         is Screen.Results -> ResultsScreen(
@@ -152,12 +170,12 @@ private fun SkewApp(store: SkewStore) {
             submitted = s.rec.submitted,
             roundLabel = s.roundLabel,
             onShare = {
-                shareScore(context, s.snap.score, s.roundLabel, s.rec.newBest, s.dateId, s.snap.mode)
+                sharePacket(context, s.snap.score, s.roundLabel, s.rec.newBest, s.dateId, s.snap.mode)
             },
             onChallenge = {
-                shareChallenge(context, s.snap.score, s.dateId)
+                sharePacket(context, s.snap.score, s.roundLabel, s.rec.newBest, s.dateId, s.snap.mode)
             },
-            onAgain = { start(s.snap.mode, s.snap.mode == Mode.DAILY) },
+            onAgain = { start(s.snap.mode, s.snap.mode == Mode.DAILY, s.dateId.takeIf { s.snap.mode == Mode.DAILY }) },
             onHome = { goHome() },
         )
     }
