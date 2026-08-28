@@ -2,6 +2,16 @@ import { utcDateId } from "./rng";
 
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
+/** Shift a valid `YYYY-MM-DD` by whole UTC days. */
+export function shiftUtcDate(dateId: string, days: number): string {
+  const m = DATE_RE.exec(dateId);
+  if (!m) return dateId;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  return utcDateId(new Date(Date.UTC(y, mo - 1, d + days)));
+}
+
 export function isUtcDateId(value: string): boolean {
   const m = DATE_RE.exec(value);
   if (!m) return false;

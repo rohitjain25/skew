@@ -29,6 +29,7 @@ export interface CardInput {
   newBest: boolean;
   mode: Mode;
   dateId: string;
+  streak?: number;
 }
 
 /** Live host, e.g. temporary-zippy-mistral-mg92d6h.vercel.app — not SKEW.GAME. */
@@ -64,6 +65,13 @@ export function shareSilhouettes(mode: Mode, dateId: string): [ShareSil, ShareSi
 export function cardDateLine(mode: Mode, dateId: string): string | null {
   if (mode !== "daily" || !dateId) return null;
   return `${dateId} UTC`;
+}
+
+/** Monospace line under the UTC date. Hidden for streak 0–1, Endless, and undated cards. */
+export function cardStreakLine(mode: Mode, dateId: string, streak: number): string | null {
+  if (!cardDateLine(mode, dateId)) return null;
+  if (streak < 2) return null;
+  return `${streak}-day streak`;
 }
 
 export function cardMetaLine(roundLabel: string, newBest: boolean): string {
@@ -141,6 +149,12 @@ export async function renderScoreCard(input: CardInput): Promise<Blob> {
     ctx.fillStyle = MUTED;
     ctx.font = "500 28px ui-monospace, SFMono-Regular, Menlo, monospace";
     ctx.fillText(dateLine, w / 2, 928);
+  }
+  const streakLine = cardStreakLine(input.mode, input.dateId, input.streak ?? 0);
+  if (streakLine) {
+    ctx.fillStyle = MUTED;
+    ctx.font = "500 28px ui-monospace, SFMono-Regular, Menlo, monospace";
+    ctx.fillText(streakLine, w / 2, 968);
   }
 
   ctx.fillStyle = MUTED;
@@ -306,6 +320,7 @@ export async function shareResult(opts: {
   newBest: boolean;
   mode: Mode;
   dateId: string;
+  streak?: number;
 }): Promise<"shared" | "downloaded" | "copied" | "cancelled"> {
   const blob = await renderScoreCard(opts);
   const file = new File([blob], "skew-score.png", { type: "image/png" });

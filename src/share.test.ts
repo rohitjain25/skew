@@ -5,6 +5,7 @@ import { dailySeed, hashString } from "./game/rng";
 import {
   cardDateLine,
   cardMetaLine,
+  cardStreakLine,
   challengeText,
   shareLockup,
   shareSilhouetteKey,
@@ -30,6 +31,14 @@ describe("share card", () => {
     expect(cardDateLine("endless", "2026-08-26")).toBeNull();
     expect(cardMetaLine("Round 12", true)).toBe("Round 12  ·  New best");
     expect(cardMetaLine("Round 12", false)).toBe("Round 12");
+  });
+
+  it("shows N-day streak under the date only when streak is at least 2", () => {
+    expect(cardStreakLine("daily", "2026-08-28", 2)).toBe("2-day streak");
+    expect(cardStreakLine("daily", "2026-08-28", 1)).toBeNull();
+    expect(cardStreakLine("daily", "2026-08-28", 0)).toBeNull();
+    expect(cardStreakLine("endless", "2026-08-28", 5)).toBeNull();
+    expect(cardStreakLine("daily", "2026-08-28", 2)).not.toMatch(/₹|poker|chip|upi/i);
   });
 
   it("silhouettes are hashed, stable, and not the daily puzzle seed", () => {

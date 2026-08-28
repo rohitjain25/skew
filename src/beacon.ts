@@ -15,12 +15,21 @@ function ensureSid(): string | null {
   }
 }
 
+/** Play/share ping only. Never includes streak, scores, or answers. */
+export function beaconBody(
+  d: string,
+  sid: string,
+  e: "play" | "share",
+): { d: string; sid: string; e: "play" | "share" } {
+  return { d, sid, e };
+}
+
 /** Fire-and-forget. Never throws into the game. */
 export function fireBeacon(e: "play" | "share"): void {
   try {
     const sid = ensureSid();
     if (!sid) return;
-    const body = JSON.stringify({ d: utcDateId(), sid, e });
+    const body = JSON.stringify(beaconBody(utcDateId(), sid, e));
     void fetch("/api/p", {
       method: "POST",
       headers: { "content-type": "application/json" },

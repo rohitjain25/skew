@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { beaconBody } from "./beacon";
 import {
   SHARE_CAP,
   applyPlay,
@@ -79,5 +80,24 @@ describe("beacon protocol", () => {
     expect(state).toEqual({ plays: [sid], shareBySid: { [sid]: 2 } });
     const m = dayMetrics("2026-08-27", state);
     expect(Object.keys(m).sort()).toEqual(["day", "k", "shares", "unique_players"]);
+  });
+
+  it("never sends streak on /api/p", () => {
+    const body = beaconBody("2026-08-27", "2c1c2a4e-4d3a-4b8f-9c1d-7a6b5c4d3e2f", "play");
+    expect(Object.keys(body).sort()).toEqual(["d", "e", "sid"]);
+    expect(body).not.toHaveProperty("streak");
+    expect(JSON.stringify(body)).not.toMatch(/streak/);
+    expect(
+      parseBeaconBody({
+        d: "2026-08-27",
+        sid: "2c1c2a4e-4d3a-4b8f-9c1d-7a6b5c4d3e2f",
+        e: "play",
+        streak: 9,
+      }),
+    ).toEqual({
+      d: "2026-08-27",
+      sid: "2c1c2a4e-4d3a-4b8f-9c1d-7a6b5c4d3e2f",
+      e: "play",
+    });
   });
 });

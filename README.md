@@ -10,7 +10,7 @@ No account. No download. 3 lives. Combo on consecutive hits. A typical endless r
 
 Daily uses the UTC date as a seed. `?d=YYYY-MM-DD` selects that UTC day. Missing or invalid `d` falls back to UTC today. Same date → same 12 rounds for every player.
 
-Personal best is saved in localStorage. There is no public leaderboard.
+Personal best and a local Daily streak are saved in localStorage. There is no public leaderboard. Streak counts only the first Daily of each UTC day. Practice, archive (`?d=` of a past day), and Endless do not count. Miss a UTC day and the current streak resets. Streak is never sent to the server.
 
 ## Play locally
 

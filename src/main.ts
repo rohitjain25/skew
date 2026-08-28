@@ -18,9 +18,10 @@ import {
   shapeSvg,
   syncDailyQuery,
 } from "./game/index";
-import { getDailySubmit, recordRun } from "./storage";
+import { formatStatsLine, getDailySubmit, getLocalStats, recordRun } from "./storage";
+import type { LocalStats } from "./storage";
 import { fireBeacon } from "./beacon";
-import { cardDateLine, challengeText, shareBoardMarkup, shareLockup, shareResult } from "./share";
+import { cardDateLine, cardStreakLine, challengeText, shareBoardMarkup, shareLockup, shareResult } from "./share";
 import type { Mode, RunSnapshot } from "./game/types";
 
 function root(): HTMLDivElement {
@@ -33,8 +34,12 @@ const app = root();
 
 let engine: Engine | null = null;
 let raf = 0;
-let lastResult: (RunSnapshot & { best: number; newBest: boolean; submitted: boolean }) | null =
-  null;
+let lastResult: (RunSnapshot & {
+  best: number;
+  newBest: boolean;
+  submitted: boolean;
+  stats: LocalStats;
+}) | null = null;
 
 function vibrate(pattern: number | number[]): void {
   try {
@@ -61,6 +66,8 @@ function landing(): void {
   const dailyNote = submit
     ? `Today ${formatScore(submit.score)}`
     : `${DAILY_ROUNDS} rounds · UTC`;
+  const streak = getLocalStats().streak;
+  const streakNote = streak > 0 ? `<span class="btn-sub">${streak}-day streak</span>` : "";
   show(`
     <main class="screen landing">
       <div class="landing-mark text-ink">${logoMark()}</div>
@@ -68,7 +75,7 @@ function landing(): void {
       <p class="tagline"><span class="find">Find</span> the fake.</p>
       <div class="actions">
         <button class="btn btn-primary" data-act="play" type="button">Play</button>
-        <button class="btn btn-ghost" data-act="daily" type="button">Daily<span class="btn-sub">${dailyNote}</span></button>
+        <button class="btn btn-ghost" data-act="daily" type="button">Daily<span class="btn-sub">${dailyNote}</span>${streakNote}</button>
       </div>
       <p class="fine">Free. No account. 3 lives. Combo. ~45–90s.</p>
       <p class="fine muted">Daily resets in ${reset}</p>
@@ -234,6 +241,9 @@ function renderResults(): void {
       : snap.mode === "daily" && snap.practice
         ? "Practice · first run already saved"
         : "";
+  const stats = snap.stats ?? getLocalStats();
+  const dateLine = snap.mode === "daily" ? cardDateLine(snap.mode, dateId) : null;
+  const streakLine = cardStreakLine(snap.mode, dateId, stats.streak);
   show(`
     <main class="screen results">
       <article class="score-card" aria-label="Score card">
@@ -242,12 +252,14 @@ function renderResults(): void {
         <div class="card-sils">${shareBoardMarkup(snap.mode, dateId)}</div>
         <p class="card-score">${formatScore(snap.score)}</p>
         <p class="card-meta">${label} · ${snap.newBest ? "New best" : bestLine}</p>
-        ${snap.mode === "daily" && cardDateLine(snap.mode, dateId) ? `<p class="card-date">${cardDateLine(snap.mode, dateId)}</p>` : ""}
+        ${dateLine ? `<p class="card-date">${dateLine}</p>` : ""}
+        ${streakLine ? `<p class="card-streak">${streakLine}</p>` : ""}
         <p class="card-cta">Can you beat me?</p>
         <i class="card-rule" aria-hidden="true"></i>
         <p class="card-url">${shareLockup()}</p>
       </article>
       <p class="result-kicker">${modeLine}${submitLine ? ` · ${submitLine}` : ""}</p>
+      <p class="result-stats">${formatStatsLine(stats)}</p>
       <div class="actions">
         <button class="btn btn-primary" data-act="share" type="button">Share card</button>
         <button class="btn btn-ghost" data-act="challenge" type="button">Challenge a friend</button>
@@ -266,6 +278,7 @@ function renderResults(): void {
         newBest: snap.newBest,
         mode: snap.mode,
         dateId,
+        streak: stats.streak,
       });
       if (status === "shared") fireBeacon("share");
       btn.textContent =
